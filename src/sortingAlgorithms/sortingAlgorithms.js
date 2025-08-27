@@ -19,64 +19,65 @@ function doMerge(mainArray, startIdx, middleIdx, endIdx, auxiliaryArray, animati
   let i = startIdx;
   let j = middleIdx + 1;
   while (i <= middleIdx && j <= endIdx) {
-    animations.push([i, j]);
-    animations.push([i, j]);
+    animations.push(['compare', i, j]);
+    animations.push(['revert', i, j]);
     if (auxiliaryArray[i] <= auxiliaryArray[j]) {
-      animations.push([k, auxiliaryArray[i]]);
+      animations.push(['overwrite', k, auxiliaryArray[i]]);
       mainArray[k++] = auxiliaryArray[i++];
     } else {
-      animations.push([k, auxiliaryArray[j]]);
+      animations.push(['overwrite', k, auxiliaryArray[j]]);
       mainArray[k++] = auxiliaryArray[j++];
     }
   }
   while (i <= middleIdx) {
-    animations.push([i, i]);
-    animations.push([i, i]);
-    animations.push([k, auxiliaryArray[i]]);
+    animations.push(['compare', i, i]);
+    animations.push(['revert', i, i]);
+    animations.push(['overwrite', k, auxiliaryArray[i]]);
     mainArray[k++] = auxiliaryArray[i++];
   }
   while (j <= endIdx) {
-    animations.push([j, j]);
-    animations.push([j, j]);
-    animations.push([k, auxiliaryArray[j]]);
+    animations.push(['compare', j, j]);
+    animations.push(['revert', j, j]);
+    animations.push(['overwrite', k, auxiliaryArray[j]]);
     mainArray[k++] = auxiliaryArray[j++];
   }
 }
 
 export function getQuickSortAnimations(array) {
   const animations = [];
-  quickSortHelper(array, 0, array.length - 1, animations);
+  const arr = array.slice();
+  quickSortHelper(arr, 0, arr.length - 1, animations);
   return animations;
 }
 
-function quickSortHelper(array, low, high, animations) {
+function quickSortHelper(arr, low, high, animations) {
   if (low < high) {
-    const pivotIndex = partition(array, low, high, animations);
-    quickSortHelper(array, low, pivotIndex - 1, animations);
-    quickSortHelper(array, pivotIndex + 1, high, animations);
+    const pivotIndex = partition(arr, low, high, animations);
+    quickSortHelper(arr, low, pivotIndex - 1, animations);
+    quickSortHelper(arr, pivotIndex + 1, high, animations);
   }
 }
 
-function partition(array, low, high, animations) {
-  const pivot = array[high];
+function partition(arr, low, high, animations) {
+  const pivot = arr[high];
   let i = low - 1;
   for (let j = low; j < high; j++) {
     animations.push(["compare", j, high]);
     animations.push(["revert", j, high]);
-    if (array[j] < pivot) {
+    if (arr[j] < pivot) {
       i++;
-      animations.push(["swap", i, array[j]]);
-      animations.push(["swap", j, array[i]]);
-      const temp = array[i];
-      array[i] = array[j];
-      array[j] = temp;
+      animations.push(["overwrite", i, arr[j]]);
+      animations.push(["overwrite", j, arr[i]]);
+      const temp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = temp;
     }
   }
-  animations.push(["swap", i + 1, array[high]]);
-  animations.push(["swap", high, array[i + 1]]);
-  const temp = array[i + 1];
-  array[i + 1] = array[high];
-  array[high] = temp;
+  animations.push(["overwrite", i + 1, arr[high]]);
+  animations.push(["overwrite", high, arr[i + 1]]);
+  const temp = arr[i + 1];
+  arr[i + 1] = arr[high];
+  arr[high] = temp;
   return i + 1;
 }
 
@@ -89,8 +90,8 @@ export function getBubbleSortAnimations(array) {
       animations.push(["compare", j, j + 1]);
       animations.push(["revert", j, j + 1]);
       if (arr[j] > arr[j + 1]) {
-        animations.push(["swap", j, arr[j + 1]]);
-        animations.push(["swap", j + 1, arr[j]]);
+        animations.push(["overwrite", j, arr[j + 1]]);
+        animations.push(["overwrite", j + 1, arr[j]]);
         const temp = arr[j];
         arr[j] = arr[j + 1];
         arr[j + 1] = temp;
@@ -123,8 +124,8 @@ export function getHeapSortAnimations(array) {
     }
 
     if (largest !== i) {
-      animations.push(["swap", i, arr[largest]]);
-      animations.push(["swap", largest, arr[i]]);
+      animations.push(["overwrite", i, arr[largest]]);
+      animations.push(["overwrite", largest, arr[i]]);
       const temp = arr[i];
       arr[i] = arr[largest];
       arr[largest] = temp;
@@ -137,8 +138,8 @@ export function getHeapSortAnimations(array) {
   }
 
   for (let i = n - 1; i > 0; i--) {
-    animations.push(["swap", 0, arr[i]]);
-    animations.push(["swap", i, arr[0]]);
+    animations.push(["overwrite", 0, arr[i]]);
+    animations.push(["overwrite", i, arr[0]]);
     const temp = arr[0];
     arr[0] = arr[i];
     arr[i] = temp;
